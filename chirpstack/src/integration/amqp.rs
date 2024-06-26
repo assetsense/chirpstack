@@ -116,7 +116,13 @@ impl<'a> Integration<'a> {
         Ok(())
     }
 
-    fn get_routing_key(&self, application_id: &str, dev_eui: &str, event: &str, f_port: &str) -> Result<String> {
+    fn get_routing_key(
+        &self,
+        application_id: &str,
+        dev_eui: &str,
+        event: &str,
+        f_port: &str,
+    ) -> Result<String> {
         Ok(self.templates.render(
             "event_routing_key",
             &EventRoutingKeyContext {
@@ -137,7 +143,9 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::UplinkEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "up", pl.f_port.to_string())?;
+        let fport = pl.f_port.to_string();
+        let key =
+            self.get_routing_key(&di.application_id, &di.dev_eui, "up", &fport)?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -151,7 +159,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::JoinEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "join","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "join", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -165,7 +173,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::AckEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "ack","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "ack", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -179,7 +187,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::TxAckEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "txack","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "txack", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -193,7 +201,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::LogEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "log","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "log", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -207,7 +215,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::StatusEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "status","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "status", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -221,7 +229,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::LocationEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "location","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "location", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -235,7 +243,7 @@ impl<'a> IntegrationTrait for Integration<'a> {
         pl: &integration::IntegrationEvent,
     ) -> Result<()> {
         let di = pl.device_info.as_ref().unwrap();
-        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "integration","")?;
+        let key = self.get_routing_key(&di.application_id, &di.dev_eui, "integration", "300")?;
         let b = match self.json {
             true => serde_json::to_vec(&pl)?,
             false => pl.encode_to_vec(),
@@ -266,8 +274,9 @@ pub mod test {
         let conf = Config {
             url: env::var("TEST_AMQP_URL").unwrap(),
             json: true,
-            event_routing_key: "application.{{application_id}}.device.{{dev_eui}}.event.{{event}}.fport.{{f_port}}"
-                .to_string(),
+            event_routing_key:
+                "application.{{application_id}}.device.{{dev_eui}}.event.{{event}}.fport.{{f_port}}"
+                    .to_string(),
         };
 
         let conn = loop {

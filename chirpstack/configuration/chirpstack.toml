@@ -19,7 +19,7 @@
   #  * require - Always SSL (skip verification)
   #  * verify-ca - Always SSL (verify that the certificate presented by the server was signed by a trusted CA)
   #  * verify-full - Always SSL (verify that the certification presented by the server was signed by a trusted CA and the server host name matches the one in the certificate)
-  dsn="postgres://chirpstack:chirpstack@localhost/chirpstack?sslmode=disable"
+  dsn="postgres://postgres:root@localhost/chirpstack?sslmode=disable"
 
   # Max open connections.
   #
@@ -96,8 +96,33 @@
 
 
 [integration]
-  enabled=["mqtt"]
+  enabled=["mqtt", "amqp"]
 
   [integration.mqtt]
     server="tcp://localhost:1883/"
     json=true
+
+    [integration.mqtt.client]
+      client_cert_lifetime="365days"
+      ca_cert="/usr/local/docker/v4-chirpstack/configuration/certs/ca/ca.pem"
+      ca_key="/usr/local/docker/v4-chirpstack/configuration/certs/ca/ca-key.pem"
+
+  # AMQP / RabbitMQ integration configuration.
+  [integration.amqp]
+
+    # Server URL.
+    #
+    # See for a specification of all the possible options:
+    # https://www.rabbitmq.com/uri-spec.html
+    url="amqp://dev:dev123@localhost:5672"
+
+    # Event routing key.
+    #
+    # This is the event routing-key template used when publishing device
+    # events. Messages will be published to the "amq.topic" exchange.
+    # event_routing_key="application.{{application_id}}.device.{{dev_eui}}.event.{{event}}"
+    # event_routing_key="default"
+	  event_routing_key="event.{{event}}.fport.{{f_port}}"
+
+    # Use JSON encoding instead of Protobuf (binary).
+    json=false
